@@ -130,7 +130,8 @@ class RaceAnalysisService:
         )
         
         # Get team colors
-        team_colors = fastf1.plotting.get_team_color_mapping(session=session)
+        # team_colors = fastf1.plotting.get_team_color_mapping(session=session)
+        team_colors = {}
         
         # Process data for each team
         teams_data = []

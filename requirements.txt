@@ -15,6 +15,8 @@ scikit-learn==1.3.0
 requests==2.31.0
 beautifulsoup4==4.12.2
 python-dotenv==1.0.0
+ergast-py==1.0.0
+scipy==1.10.1
 
 # Packaging and build dependencies
 setuptools>=68.0.0  # Modern setuptools that doesn't rely on distutils
@@ -25,6 +27,7 @@ packaging>=23.1  # Modern packaging that doesn't rely on distutils
 pytest==7.4.0
 black==23.7.0
 flake8==6.1.0
+flasgger==0.9.5
 
 # Note: distutils has been deprecated in Python 3.12
 # We're keeping the original package versions to avoid build issues,

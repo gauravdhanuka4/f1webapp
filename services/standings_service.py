@@ -1,35 +1,97 @@
-"""
-Service for handling F1 standings data.
-"""
-
 import logging
-import fastf1
-import pandas as pd
-from datetime import datetime
-import os
-from typing import Dict, List, Optional, Any
+import re
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
+import time
 
 logger = logging.getLogger('f1webapp')
 
 class StandingsService:
+    _cache = {}
+    _cache_expiry = timedelta(hours=24)
     """
-    Service for handling F1 standings data.
+    Service for handling F1 standings data by scraping the official F1 website.
     """
-    
-    def __init__(self, cache_dir='cache'):
+    BASE_URL = "https://www.formula1.com/en/results"
+
+    def _get_standings_data(self, year, standings_type):
         """
-        Initialize the standings service.
+        Generic method to fetch and parse standings data.
         
         Args:
-            cache_dir: Directory for FastF1 cache
+            year (int): The year to get standings for.
+            standings_type (str): 'drivers' or 'team'.
+            
+        Returns:
+            list: A list of dictionaries containing standings data, or an empty list on error.
         """
-        # Adjust paths to be relative to the app root
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.cache_dir = os.path.join(base_dir, cache_dir)
-        
-        # Enable FastF1 cache
-        fastf1.Cache.enable_cache(self.cache_dir)
-        
+        try:
+            url = f"{self.BASE_URL}/{year}/{standings_type}"
+            response = requests.get(url)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.content, 'html.parser')
+            table = soup.find('table', class_='f1-table f1-table-with-data w-full')
+            if not table:
+                logger.warning(f"No {standings_type} standings table found for {year}")
+                return []
+
+            tbody = table.find('tbody')
+            if not tbody:
+                logger.warning(f"No tbody found in {standings_type} standings table for {year}")
+                return []
+
+            rows = tbody.find_all('tr')
+            standings = []
+
+            for row in rows:
+                cols = row.find_all('td')
+                if not cols:
+                    continue
+
+                if standings_type == 'drivers':
+                    position = cols[0].text.strip()
+                    
+                    driver_cell = cols[1]
+                    full_text = driver_cell.text.replace('\xa0', ' ').strip()
+                    
+                    # Find the 3-letter abbreviation and take the text before it
+                    match = re.search(r'[A-Z]{3}', full_text)
+                    if match:
+                        driver_name = full_text[:match.start()].strip()
+                    else:
+                        driver_name = full_text
+
+                    team_name = cols[3].text.strip()
+                    points = cols[4].text.strip()
+                    
+                    standings.append({
+                        "position": position,
+                        "driverName": driver_name,
+                        "teamName": team_name,
+                        "points": points
+                    })
+                elif standings_type == 'team':
+                    position = cols[0].text.strip()
+                    team_name = cols[1].text.strip()
+                    points = cols[2].text.strip()
+
+                    standings.append({
+                        "position": position,
+                        "teamName": team_name,
+                        "points": points
+                    })
+            
+            return standings
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error fetching {standings_type} standings for {year}: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Error parsing {standings_type} standings for {year}: {e}")
+            return []
+
     def get_driver_standings(self, year=None):
         """
         Get driver standings for a specific year.
@@ -40,52 +102,27 @@ class StandingsService:
         Returns:
             dict: Driver standings data
         """
-        try:
-            # If year is not provided, use current year
-            if not year:
-                year = datetime.now().year
-                
-            # Get the latest event for the specified year
-            events = fastf1.get_event_schedule(year)
-            
-            # Filter completed events
-            completed_events = events[events['EventDate'] < pd.Timestamp.now()]
-            
-            if completed_events.empty:
-                logger.warning(f"No completed events found for {year}")
-                return {"year": year, "standings": []}
-                
-            # Get the latest completed event
-            latest_event = completed_events.iloc[-1]
-            
-            # Load the session
-            session = fastf1.get_session(year, latest_event['EventName'], 'R')
-            session.load()
-            
-            # Get driver standings
-            driver_standings = session.get_driver_standings()
-            
-            # Format the response
-            standings = []
-            for _, row in driver_standings.iterrows():
-                driver_data = {
-                    "position": int(row['Position']),
-                    "driverCode": row['Abbreviation'],
-                    "driverName": f"{row['FirstName']} {row['LastName']}",
-                    "teamName": row['TeamName'],
-                    "points": float(row['Points'])
-                }
-                standings.append(driver_data)
-                
-            return {
-                "year": year,
-                "lastUpdated": latest_event['EventDate'].strftime('%Y-%m-%dT%H:%M:%SZ'),
-                "standings": standings
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting driver standings: {e}")
-            return {"year": year if year else datetime.now().year, "standings": []}
+        if not year:
+            year = datetime.now().year
+        
+        cache_key = f"driver_standings_{year}"
+        if cache_key in self._cache and (time.time() - self._cache[cache_key]['timestamp']) < self._cache_expiry.total_seconds():
+            logger.info(f"Using cached driver standings for {year}")
+            return self._cache[cache_key]['data']
+
+        standings_data = self._get_standings_data(year, 'drivers')
+        
+        result = {
+            "year": year,
+            "standings": standings_data
+        }
+        
+        self._cache[cache_key] = {
+            'data': result,
+            'timestamp': time.time()
+        }
+        
+        return result
     
     def get_constructor_standings(self, year=None):
         """
@@ -97,93 +134,30 @@ class StandingsService:
         Returns:
             dict: Constructor standings data
         """
-        try:
-            # If year is not provided, use current year
-            if not year:
-                year = datetime.now().year
-                
-            # Get the latest event for the specified year
-            events = fastf1.get_event_schedule(year)
+        if not year:
+            year = datetime.now().year
             
-            # Filter completed events
-            completed_events = events[events['EventDate'] < pd.Timestamp.now()]
-            
-            if completed_events.empty:
-                logger.warning(f"No completed events found for {year}")
-                return {"year": year, "standings": []}
-                
-            # Get the latest completed event
-            latest_event = completed_events.iloc[-1]
-            
-            # Load the session
-            session = fastf1.get_session(year, latest_event['EventName'], 'R')
-            session.load()
-            
-            # Get constructor standings
-            constructor_standings = session.get_constructor_standings()
-            
-            # Format the response
-            standings = []
-            for _, row in constructor_standings.iterrows():
-                constructor_data = {
-                    "position": int(row['Position']),
-                    "teamName": row['TeamName'],
-                    "points": float(row['Points'])
-                }
-                standings.append(constructor_data)
-                
-            return {
-                "year": year,
-                "lastUpdated": latest_event['EventDate'].strftime('%Y-%m-%dT%H:%M:%SZ'),
-                "standings": standings
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting constructor standings: {e}")
-            return {"year": year if year else datetime.now().year, "standings": []}
+        cache_key = f"constructor_standings_{year}"
+        if cache_key in self._cache and (time.time() - self._cache[cache_key]['timestamp']) < self._cache_expiry.total_seconds():
+            logger.info(f"Using cached constructor standings for {year}")
+            return self._cache[cache_key]['data']
 
-    def get_all_drivers(self, year=None):
-        """
-        Get all drivers for a specific year.
+        standings_data = self._get_standings_data(year, 'team')
+            
+        result = {
+            "year": year,
+            "standings": standings_data
+        }
         
-        Args:
-            year: The year to get the drivers for (defaults to current year)
-            
-        Returns:
-            dict: List of drivers
-        """
-        try:
-            # If year is not provided, use current year
-            if not year:
-                year = datetime.now().year
-                
-            # Get the first event of the year to load drivers
-            events = fastf1.get_event_schedule(year)
-            first_event = events.iloc[0]
-            
-            # Load the session
-            session = fastf1.get_session(year, first_event['EventName'], 'R')
-            session.load()
-            
-            # Get all drivers
-            drivers = session.drivers
-            
-            # Format the response
-            driver_list = []
-            for driver_id in drivers:
-                driver_info = session.get_driver(driver_id)
-                driver_list.append({
-                    "driverId": driver_id,
-                    "code": driver_info['Abbreviation'],
-                    "name": f"{driver_info['FirstName']} {driver_info['LastName']}",
-                    "number": driver_info['DriverNumber']
-                })
-                
-            return {
-                "year": year,
-                "drivers": driver_list
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting all drivers: {e}")
-            return {"year": year if year else datetime.now().year, "drivers": []}
+        self._cache[cache_key] = {
+            'data': result,
+            'timestamp': time.time()
+        }
+        
+        return result
+
+    @classmethod
+    def clear_cache(cls):
+        """Clears the in-memory cache."""
+        cls._cache.clear()
+        logger.info("StandingsService cache cleared.")

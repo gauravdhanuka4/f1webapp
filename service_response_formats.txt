@@ -1,0 +1,243 @@
+### `StandingsService`
+
+*   **`get_driver_standings(year)`**
+    ```json
+    {
+      "year": 2023,
+      "standings": [
+        {
+          "position": "1",
+          "driverName": "Max Verstappen",
+          "teamName": "Red Bull Racing Honda RBPT",
+          "points": "575"
+        }
+      ]
+    }
+    ```
+*   **`get_constructor_standings(year)`**
+    ```json
+    {
+      "year": 2023,
+      "standings": [
+        {
+          "position": "1",
+          "teamName": "Red Bull Racing Honda RBPT",
+          "points": "860"
+        }
+      ]
+    }
+    ```
+
+### `PredictionService`
+
+*   **`predict_lap_time(year, race, driver)`**
+    *   **Success:**
+        ```json
+        {
+          "predicted_lap_time": 88.345
+        }
+        ```
+    *   **Error:**
+        ```json
+        {
+          "error": "Model not loaded. Please train the model first."
+        }
+        ```
+
+### `RaceAnalysisService`
+
+*   **`get_race_pace_data(session, num_drivers)`**
+    ```json
+    {
+      "drivers": [
+        {
+          "code": "VER",
+          "name": "Max Verstappen",
+          "color": "#3671C6",
+          "team": "Red Bull Racing",
+          "lapTimes": [88.1, 88.2, 88.0],
+          "compounds": ["MEDIUM", "MEDIUM", "HARD"]
+        }
+      ],
+      "session": {
+        "name": "Bahrain Grand Prix",
+        "year": 2023
+      }
+    }
+    ```
+*   **`get_team_pace_data(session)`**
+    ```json
+    {
+      "teams": [
+        {
+          "name": "Red Bull Racing",
+          "color": "#3671C6",
+          "lapTimes": {
+            "min": 88.0,
+            "q1": 88.2,
+            "median": 88.5,
+            "q3": 88.8,
+            "max": 89.5
+          }
+        }
+      ],
+      "session": {
+        "name": "Bahrain Grand Prix",
+        "year": 2023
+      }
+    }
+    ```
+*   **`get_lap_sections_data(session, drivers)`**
+    ```json
+    {
+      "sections": [
+        {
+          "name": "braking",
+          "drivers": [
+            {
+              "code": "VER",
+              "color": "#3671C6",
+              "time": [10.1, 15.2, 25.3],
+              "speed": [280, 120, 290]
+            }
+          ]
+        }
+      ],
+      "session": {
+        "name": "Bahrain Grand Prix",
+        "year": 2023
+      }
+    }
+    ```
+
+### `ScheduleService`
+
+*   **`get_schedule(year, include_testing)`**
+    ```json
+    {
+      "year": 2023,
+      "races": [
+        {
+          "round": 1,
+          "name": "Bahrain Grand Prix",
+          "location": "Sakhir",
+          "country": "Bahrain",
+          "flagUrl": "https://example.com/flags/bahrain.png",
+          "events": [
+            {
+              "type": "Practice 1",
+              "startTime": "2023-03-03T12:30:00Z"
+            }
+          ]
+        }
+      ]
+    }
+    ```
+*   **`get_next_event()`**
+    ```json
+    {
+      "race": {
+        "round": 10,
+        "name": "British Grand Prix",
+        "location": "Silverstone",
+        "country": "UK",
+        "flagUrl": "https://example.com/flags/uk.png"
+      },
+      "events": [
+        {
+          "type": "Practice 1",
+          "startTime": "2023-07-07T12:30:00Z",
+          "placeholder": true
+        }
+      ]
+    }
+    ```
+
+### `TelemetryService`
+
+*   **`get_speed_trace_data(session, driver1, driver2)`**
+    ```json
+    {
+      "circuit": {
+        "rotation": -15,
+        "corners": [
+          {"distance": 500, "number": 1, "letter": "T1"}
+        ]
+      },
+      "driver1": {
+        "name": "VER",
+        "color": "#3671C6",
+        "lapTime": "01:28.997",
+        "distance": [0, 5, 10],
+        "speed": [0, 100, 150]
+      },
+      "driver2": { ... },
+      "session": {
+        "name": "Bahrain Grand Prix",
+        "year": 2023
+      }
+    }
+    ```
+*   **`get_gear_shifts_data(session, driver)`**
+    ```json
+    {
+      "driver": {
+        "name": "VER",
+        "color": "#3671C6",
+        "lapTime": "01:28.997"
+      },
+      "track": {
+        "x": [1, 2, 3],
+        "y": [1, 2, 3],
+        "rotation": -15
+      },
+      "gears": [1, 2, 3],
+      "speed": [100, 150, 200]
+    }
+    ```
+*   **`get_track_dominance_data(session, drivers)`**
+    ```json
+    {
+      "track": {
+        "x": [1, 2, 3],
+        "y": [1, 2, 3],
+        "rotation": -15
+      },
+      "miniSectors": [
+        {
+          "id": 0,
+          "driver": "VER",
+          "color": "#3671C6",
+          "time": "0:00:05.123",
+          "coordinates": {
+            "x": [1, 2, 3],
+            "y": [1, 2, 3]
+          }
+        }
+      ],
+      "drivers": [
+        {
+          "code": "VER",
+          "name": "Max Verstappen",
+          "number": 1,
+          "color": "#3671C6"
+        }
+      ]
+    }
+    ```
+*   **`get_all_laps(session)`**
+    ```json
+    {
+      "laps": [
+        {
+          "lapNumber": 1,
+          "driverCode": "VER",
+          "lapTime": 88.997,
+          "compound": "MEDIUM"
+        }
+      ],
+      "session": {
+        "name": "Bahrain Grand Prix",
+        "year": 2023
+      }
+    }

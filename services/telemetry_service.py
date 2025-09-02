@@ -191,6 +191,17 @@ class TelemetryService:
         
         # Return structured data
         return {
+            "circuit": {
+                "rotation": circuit_info.rotation,
+                "corners": [
+                    {
+                        "distance": float(corner['Distance']),
+                        "number": int(corner['Number']),
+                        "letter": str(corner['Letter'])
+                    }
+                    for _, corner in circuit_info.corners.iterrows()
+                ]
+            },
             "driver1": {
                 "name": driver1,
                 "color": driver1_color,
@@ -210,16 +221,6 @@ class TelemetryService:
                 "throttle": driver2_tel['Throttle'].tolist(),
                 "brake": driver2_tel['Brake'].tolist() if 'Brake' in driver2_tel else None,
                 "drs": driver2_tel['DRS'].tolist() if 'DRS' in driver2_tel else None
-            },
-            "circuit": {
-                "corners": [
-                    {
-                        "distance": float(corner['Distance']),
-                        "number": int(corner['Number']),
-                        "letter": str(corner['Letter'])
-                    }
-                    for _, corner in circuit_info.corners.iterrows()
-                ]
             },
             "session": {
                 "name": session.event['EventName'],
@@ -253,7 +254,8 @@ class TelemetryService:
             },
             "track": {
                 "x": tel['X'].tolist(),
-                "y": tel['Y'].tolist()
+                "y": tel['Y'].tolist(),
+                "rotation": session.get_circuit_info().rotation
             },
             "gears": tel['nGear'].tolist(),
             "speed": tel['Speed'].tolist(),
@@ -368,7 +370,7 @@ class TelemetryService:
                                     mini_sector_data.append({
                                         'id': int(minisector),
                                         'driver': str(fastest_driver),
-                                        'color': get_driver_colors(session).get(fastest_driver, 'white'),
+                                        'color': fastf1.plotting.get_driver_color(fastest_driver, session=session),
                                         'time': str(time_spent),
                                         'coordinates': {
                                             'x': sector_x,
@@ -382,7 +384,8 @@ class TelemetryService:
         return {
             'track': {
                 'x': x.tolist(),
-                'y': y.tolist()
+                'y': y.tolist(),
+                'rotation': session.get_circuit_info().rotation
             },
             'miniSectors': mini_sector_data,
             'drivers': [

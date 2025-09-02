@@ -57,7 +57,8 @@ class _SessionService:
         
         # Remove oldest session if cache is full
         if len(self.session_cache) > self.max_cache_size:
-            self.session_cache.popitem(last=False)
+            popped_item = self.session_cache.popitem(last=False)
+            logger.info(f"Cache full. Evicting session: {popped_item[0]}")
         
         return session
     

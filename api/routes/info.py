@@ -80,49 +80,6 @@ def get_drivers():
         logger.error(f"Error getting driver standings: {e}")
         return create_response({"error": str(e)}, 500)
 
-@info_bp.route('/all-drivers', methods=['GET'])
-def get_all_drivers():
-    """
-    Get all drivers for a given year.
-    
-    Query Parameters:
-        year (int, optional): The year to get the drivers for
-        
-    Returns:
-        JSON: List of drivers
-    """
-    try:
-        year = request.args.get('year')
-        if year:
-            year = int(year)
-            
-        drivers = standings_service.get_all_drivers(year)
-        return create_response(drivers)
-    except Exception as e:
-        logger.error(f"Error getting all drivers: {e}")
-        return create_response({"error": str(e)}, 500)
-
-@info_bp.route('/races', methods=['GET'])
-def get_races():
-    """
-    Get all races for a given year.
-    
-    Query Parameters:
-        year (int, optional): The year to get the races for
-        
-    Returns:
-        JSON: List of races
-    """
-    try:
-        year = request.args.get('year')
-        if year:
-            year = int(year)
-        
-        schedule = schedule_service.get_schedule(year)
-        return create_response(schedule)
-    except Exception as e:
-        logger.error(f"Error getting all races: {e}")
-        return create_response({"error": str(e)}, 500)
 
 @info_bp.route('/constructors', methods=['GET'])
 def get_constructors():

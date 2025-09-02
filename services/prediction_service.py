@@ -1,10 +1,7 @@
-"""
-Service for handling F1 qualifying lap time prediction.
-"""
-
 import logging
 import fastf1
 import xgboost as xgb
+import json
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 import numpy as np
@@ -32,27 +29,25 @@ class PredictionService:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.model_path = os.path.join(base_dir, 'models', 'trained_models', 'qualifying_time_predictor.json')
         
-        self.model = self._load_model()
+        self.model = None
         self.feature_names = None
 
     def _load_model(self):
         """
         Load the trained XGBoost model and feature names.
         """
-        feature_names_path = self.model_path.replace('.json', '_features.json')
-        if os.path.exists(self.model_path) and os.path.exists(feature_names_path):
-            logger.info(f"Loading model from {self.model_path}")
-            model = xgb.XGBRegressor()
-            model.load_model(self.model_path)
-            
-            logger.info(f"Loading feature names from {feature_names_path}")
-            with open(feature_names_path, 'r') as f:
-                self.feature_names = json.load(f)
-            
-            return model
-        else:
-            logger.warning(f"Model file or feature names file not found. The model needs to be trained.")
-            return None
+        if self.model is None:
+            feature_names_path = self.model_path.replace('.json', '_features.json')
+            if os.path.exists(self.model_path) and os.path.exists(feature_names_path):
+                logger.info(f"Loading model from {self.model_path}")
+                self.model = xgb.XGBRegressor()
+                self.model.load_model(self.model_path)
+                
+                logger.info(f"Loading feature names from {feature_names_path}")
+                with open(feature_names_path, 'r') as f:
+                    self.feature_names = json.load(f)
+            else:
+                logger.warning(f"Model file or feature names file not found. The model needs to be trained.")
 
     def _get_telemetry_features(self, lap):
         """
@@ -212,6 +207,7 @@ class PredictionService:
         """
         Predict the qualifying lap time for a given driver.
         """
+        self._load_model()
         if self.model is None:
             raise Exception("Model not loaded. Please train the model first.")
 
