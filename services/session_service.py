@@ -61,10 +61,27 @@ class _SessionService:
             logger.info(f"Cache full. Evicting session: {popped_item[0]}")
         
         return session
+
+    def get_drivers_for_session(self, year: int, race: str, session_type: str) -> list[str]:
+        """
+        Get the list of drivers for a specific session.
+        
+        Args:
+            year: The year of the session
+            race: The race name or round number
+            session_type: The session type (e.g., 'R', 'Q', 'FP1')
+            
+        Returns:
+            A list of driver abbreviations
+        """
+        session = self.get_session(year, race, session_type)
+        if session and session.results is not None:
+            return session.results['Abbreviation'].tolist()
+        return []
     
     def clear_cache(self):
         """Clear the session cache."""
         self.session_cache.clear()
         logger.info("Session cache cleared")
 
-SessionService = _SessionService()
+SessionService = _SessionService

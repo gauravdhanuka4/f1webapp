@@ -9,6 +9,7 @@ venv/
 # Log files
 f1_cache.log
 f1_update.log
+f1_api.log
 
 # Test artifacts
 tests/charts/

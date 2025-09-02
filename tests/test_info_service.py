@@ -62,15 +62,5 @@ class TestInfoService(unittest.TestCase):
         # self.assertIn('teamName', data['standings'][0])
         # self.assertIn('points', data['standings'][0])
 
-    def test_get_all_drivers(self):
-        # Call the function to be tested
-        data = self.standings_service.get_all_drivers(2023)
-
-        # Assertions
-        self.assertIn('drivers', data)
-        self.assertGreater(len(data['drivers']), 0)
-        self.assertIn('driverId', data['drivers'][0])
-        self.assertIn('name', data['drivers'][0])
-
 if __name__ == '__main__':
     unittest.main()

@@ -15,7 +15,7 @@ class TestRaceAnalysisService(unittest.TestCase):
 
     def setUp(self):
         self.race_analysis_service = RaceAnalysisService()
-        self.session = SessionService.get_session(2023, 'Bahrain', 'R')
+        self.session = SessionService().get_session(2023, 'Bahrain', 'R')
         self.charts_dir = os.path.join(os.path.dirname(__file__), 'charts')
         os.makedirs(self.charts_dir, exist_ok=True)
 

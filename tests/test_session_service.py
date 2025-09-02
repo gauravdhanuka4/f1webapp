@@ -14,13 +14,15 @@ from services.session_service import SessionService
 class TestSessionService(unittest.TestCase):
 
     def setUp(self):
-        # Clear the in-memory cache before each test
-        SessionService.clear_cache()
+        self.session_service = SessionService()
+        self.session_service.clear_cache()
 
-    def test_get_session_in_memory_caching(self):
-        # Ensure the fastf1 disk cache is enabled
-        fastf1.Cache.enable_cache('f1webapp/cache')
-        
+    @patch('services.session_service.fastf1.get_session')
+    def test_get_session_in_memory_caching(self, mock_get_session):
+        # Mock the fastf1.get_session function
+        mock_session = MagicMock()
+        mock_get_session.return_value = mock_session
+
         # Create a logger to capture log messages
         logger = logging.getLogger('f1webapp')
         logger.setLevel(logging.INFO)
@@ -42,12 +44,11 @@ class TestSessionService(unittest.TestCase):
         logger.addHandler(handler)
         logger.addHandler(stream_handler)
         
-        # Call get_session for the first time. This will load from disk cache if available,
-        # and populate the in-memory cache.
-        session1 = SessionService.get_session(2023, 'Bahrain', 'R')
+        # Call get_session for the first time.
+        session1 = self.session_service.get_session(2023, 'Bahrain', 'R')
         
         # Call get_session for the second time. This should be served from the in-memory cache.
-        session2 = SessionService.get_session(2023, 'Bahrain', 'R')
+        session2 = self.session_service.get_session(2023, 'Bahrain', 'R')
         
         # Remove the handlers to avoid interfering with other tests
         logger.removeHandler(handler)

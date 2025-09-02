@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request
 from services.schedule_service import ScheduleService
 from services.standings_service import StandingsService
+from services.session_service import SessionService
 from api.utils.response import create_response
 
 logger = logging.getLogger('f1webapp')
@@ -17,6 +18,7 @@ info_bp = Blueprint('info', __name__)
 # Initialize services
 schedule_service = ScheduleService()
 standings_service = StandingsService()
+session_service = SessionService()
 
 @info_bp.route('/schedule', methods=['GET'])
 def get_schedule():
@@ -78,6 +80,27 @@ def get_drivers():
         return create_response(driver_standings)
     except Exception as e:
         logger.error(f"Error getting driver standings: {e}")
+        return create_response({"error": str(e)}, 500)
+
+
+@info_bp.route('/drivers/<int:year>/<race>/<session>', methods=['GET'])
+def get_session_drivers(year, race, session):
+    """
+    Get the list of drivers for a specific race session.
+    
+    Args:
+        year (int): The year of the race
+        race (str): The name of the race
+        session (str): The session identifier (e.g., 'R', 'Q', 'FP1')
+        
+    Returns:
+        JSON: A list of driver abbreviations
+    """
+    try:
+        drivers = session_service.get_drivers_for_session(year, race, session)
+        return create_response({'drivers': drivers})
+    except Exception as e:
+        logger.error(f"Error getting drivers for session {year}/{race}/{session}: {e}")
         return create_response({"error": str(e)}, 500)
 
 

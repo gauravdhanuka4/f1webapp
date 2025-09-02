@@ -8,6 +8,7 @@ interface ButtonProps {
   variant?: "primary" | "secondary" | "outline";
   className?: string;
   type?: "button" | "submit" | "reset";
+  disabled?: boolean;
 }
 
 export default function Button({
@@ -17,6 +18,7 @@ export default function Button({
   variant = "primary",
   className = "",
   type = "button",
+  disabled = false,
 }: ButtonProps) {
   const baseClasses = "inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors";
   
@@ -26,7 +28,9 @@ export default function Button({
     outline: "bg-transparent hover:bg-[#1e1e2a] border border-[#e10600] text-white focus:ring-[#e10600]",
   };
   
-  const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;
+  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
+  
+  const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${disabledClasses} ${className}`;
   
   if (href) {
     return (
@@ -37,7 +41,7 @@ export default function Button({
   }
   
   return (
-    <button type={type} onClick={onClick} className={buttonClasses}>
+    <button type={type} onClick={onClick} className={buttonClasses} disabled={disabled}>
       {children}
     </button>
   );

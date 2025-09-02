@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import time
+import fastf1
 
 logger = logging.getLogger('f1webapp')
 
