@@ -4,8 +4,10 @@ Main Flask application for F1 Web App.
 
 from flask import Flask, jsonify, render_template
 from flask_cors import CORS
+import os
 import logging
 from logging.handlers import RotatingFileHandler
+from api.config import get_config
 
 def create_app():
     """
@@ -15,10 +17,21 @@ def create_app():
         Flask: The configured Flask application
     """
     app = Flask(__name__)
+
+    config = get_config()
+    app.config.from_object(config)
+
+    if not app.debug:
+        log_file = config.LOG_FILE
+        log_dir = os.path.dirname(log_file)
+
+        # Ensure the directory exists
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir)
     
     # Set up logging
     if not app.debug:
-        handler = RotatingFileHandler('f1_api.log', maxBytes=10000, backupCount=1)
+        handler = RotatingFileHandler(log_file, maxBytes=10000, backupCount=1)
         handler.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
@@ -52,7 +65,7 @@ def create_app():
     
     @app.errorhandler(500)
     def server_error(error):
-        logger.error(f"Server error: {error}")
+        logging.logger.error(f"Server error: {error}")
         return jsonify({'error': 'Internal server error'}), 500
     
     return app

@@ -1,5 +1,5 @@
-# Stage 1: Build the Next.js application
-FROM node:18-alpine AS builder
+# Base image
+FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
@@ -10,32 +10,23 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application code
+# Copy all source code
 COPY . .
 
-# Set build-time arguments
+# Set environment variables (can be overridden)
+ARG NODE_ENV=development
+ENV NODE_ENV=${NODE_ENV}
 ARG NEXT_PUBLIC_API_URL
-
-# Set environment variables
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
-# Build the application
-RUN npm run build
-
-# Stage 2: Create the production image
-FROM node:18-alpine
-
-# Set working directory
-WORKDIR /app
-
-# Copy the built application from the builder stage
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/public ./public
-
-# Expose port 3000
+# Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Run depending on environment
+# - dev: hot reload
+# - prod: production build
+CMD if [ "$NODE_ENV" = "production" ]; then \
+    npm run build && npm start; \
+    else \
+    npm run dev; \
+    fi

@@ -1,4 +1,4 @@
-// File: /home/vivek.pokale/f1webapp/f1w-frontend/app/telemetry/page.tsx
+// File: /app/app/telemetry/page.tsx
 import * as entry from '../../../../app/telemetry/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

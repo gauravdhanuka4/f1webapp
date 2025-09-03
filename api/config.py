@@ -17,6 +17,7 @@ class Config:
     # File paths
     SCHEDULE_FILE = os.environ.get('F1_SCHEDULE_FILE', 'data/sched.csv')
     FLAGS_FILE = os.environ.get('F1_FLAGS_FILE', 'data/country_flags.json')
+    LOG_FILE = os.environ.get('F1_LOG_FILE', 'app/logs/f1_api.log')
     
     # Plot settings
     DEFAULT_FIG_SIZE = (12, 8)

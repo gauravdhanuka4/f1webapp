@@ -12,7 +12,7 @@ export default function Card({ title, children, className = "" }: CardProps) {
       <div className="f1-card-header">
         {title}
       </div>
-      <div className="f1-card-body">
+      <div className={`f1-card-body bg-white text-gray-900`}>
         {children}
       </div>
     </div>

@@ -1,4 +1,4 @@
-// File: /home/vivek.pokale/f1webapp/f1w-frontend/app/race-analysis/page.tsx
+// File: /app/app/race-analysis/page.tsx
 import * as entry from '../../../../app/race-analysis/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

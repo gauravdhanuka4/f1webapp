@@ -156,7 +156,7 @@ export default function Home() {
           </p>
           <div className="flex justify-center gap-4">
             <Button href="/telemetry">Get Started</Button>
-            <Button href="https://github.com" variant="outline">View on GitHub</Button>
+            <Button href="https://github.com/vivekpokale21/f1webapp" variant="outline">View on GitHub</Button>
           </div>
         </div>
       </div>
